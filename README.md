@@ -21,12 +21,9 @@ This project builds upon that allowing me to control it from HA or from the disp
 
 #### Initial Goals and design evolution with assistance from ChatGPT
 
-The software evolved in stages with some input from ChatGPT but with a lot of sanity checking its proposed '100% solutions' from me! For some bizarre reason ChatGPT would offer solutions for  
-older versions of ESPHome which is understandable. However, this happened many times even though I had provided the version of ESPHome LVGL version (2025.12.5)!
-This was my first time of using ChatGPT for code creation as I knew I would be encountering a steep learning curve and I was interested to see just how good it is. My conclusion is  
-is creates mostly usable code VERY quickly and can really help with useful pointers for ESPHome LVGL 'newbies' like me, however, it cannot be trusted absolutely and it  
-does seem to get stuck in what I can only describe as endless loops when encountering an issue. On at least one occasion I had to study the documentation then provide  
-a link to that documentation as ChatGPT was obviously stuck for a solution. So humans still have a vital role to play (for now)!
+The software evolved in stages with some input from ChatGPT but with a lot of sanity checking its proposed '100% solutions' from me! For some bizarre reason ChatGPT would offer solutions for older versions of ESPHome which is understandable. However, this happened many times even though I had provided the version of ESPHome LVGL version (2025.12.5)!  
+
+This was my first time of using ChatGPT for code creation as I knew I would be encountering a steep learning curve and I was interested to see just how good it is. My conclusion is it creates mostly usable code VERY quickly and can really help with useful pointers for ESPHome LVGL 'newbies' like me, however, it cannot be trusted absolutely and it does seem to get stuck in what I can only describe as endless loops when encountering an issue. On at least one occasion I had to study the documentation then provide a link to that documentation as ChatGPT was obviously stuck for a solution. So humans still have a vital role to play (for now)!
 
 ### Goal  
 To create an ESPHome-based LVGL touchscreen interface (UI) running on a Guition JC4827W543 display to switch a physical relay on a ESP32-C6 relay module controlled via Home Assistant.
@@ -121,10 +118,10 @@ Ensures clean recovery after Wi-Fi / HA restarts.
 
 
 
-###  Latest Display YAML for the - ESPHome with LVGL for the Guition JC4827W543C 4.3" LCD Display module  
+##  Latest Display YAML for the - ESPHome with LVGL for the Guition JC4827W543C 4.3" LCD Display module  
 
 Here is my latest cyd display YAML for anyone interested. Note that there are still a few features or should that be bugs which require further  
-investigation. Maybe this will give a few pointers for others just starting out with ESPHome LVGL?
+investigation but maybe this will give a few pointers for others just starting out with ESPHome LVGL?
 
 ```
 esphome:
