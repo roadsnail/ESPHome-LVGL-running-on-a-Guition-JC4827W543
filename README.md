@@ -19,7 +19,9 @@ The creation of the YAML for the ESP32-C6 Relay module is covered in a separate 
 
 This project builds upon that allowing me to control it from HA or from the display module
 
-###  Display YAML
+###  Display YAML  
+
+#### Latest YAML - ESPHome with LVGL for the Guition JC4827W543C 4.3" LCD Display module
 ```
 esphome:
   name: "cyd"
