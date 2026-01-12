@@ -469,6 +469,7 @@ binary_sensor:
               - script.execute: enable_relay_button
               - lambda: |-
                   id(countdown_active) = false;
+                  id(countdown_remaining) = 0;
               - lvgl.label.update:
                   id: countdown_label
                   hidden: true
@@ -487,20 +488,24 @@ binary_sensor:
             condition:
               binary_sensor.is_off: ha_virtual_relay
             then:
-              # Virtual relay turned OFF from HA → start countdown UI
-              - lambda: |-
-                  id(countdown_active) = true;
-                  id(countdown_remaining) = id(relay_turn_off_delay_local);
-              - lvgl.label.update:
-                  id: countdown_label
-                  hidden: false
-                  text: !lambda |-
-                    static char buf[32];
-                    snprintf(buf, sizeof(buf), "Turning off in: %d s", id(countdown_remaining));
-                    return buf;
-              - script.execute: disable_relay_button
-
-
+              - if:
+                  condition:
+                    lambda: 'return id(relay_turn_off_delay_local) > 0;'
+                  then:
+                    # Start countdown UI ONLY if delay > 0
+                    - lambda: |-
+                        id(countdown_active) = true;
+                        id(countdown_remaining) = id(relay_turn_off_delay_local);
+                    - lvgl.label.update:
+                        id: countdown_label
+                        hidden: false
+                        text: !lambda |-
+                          static char buf[32];
+                          snprintf(buf, sizeof(buf),
+                                   "Turning off in: %d s",
+                                   id(countdown_remaining));
+                          return buf;
+                    - script.execute: disable_relay_button
 
 # -------------------------------
 # LVGL UI
@@ -529,20 +534,25 @@ lvgl:
                     condition:
                       binary_sensor.is_on: ha_physical_relay
                     then:
-                      - lambda: |-
-                          id(countdown_active) = true;
-                          id(countdown_remaining) = id(relay_turn_off_delay_local);
-                      - lvgl.label.update:
-                          id: countdown_label
-                          hidden: false
-                          text: !lambda |-
-                            static char buf[32];
-                            snprintf(buf, sizeof(buf), "Turning off in: %d s", id(countdown_remaining));
-                            return buf;
-                      - script.execute: disable_relay_button
+                      - if:
+                          condition:
+                            lambda: 'return id(relay_turn_off_delay_local) > 0;'
+                          then:
+                            - lambda: |-
+                                id(countdown_active) = true;
+                                id(countdown_remaining) = id(relay_turn_off_delay_local);
+                            - lvgl.label.update:
+                                id: countdown_label
+                                hidden: false
+                                text: !lambda |-
+                                  static char buf[32];
+                                  snprintf(buf, sizeof(buf), "Turning off in: %d s", id(countdown_remaining));
+                                  return buf;
+                            - script.execute: disable_relay_button
                       - switch.turn_off: relay_proxy
                     else:
                       - switch.turn_on: relay_proxy
+
         - label:
             id: relay_state_label
             x: 220
