@@ -1,6 +1,8 @@
 # ESPHome-LVGL-running-on-a-Guition-JC4827W543
 ### A proof of concept project to control a ESP32-C6 relay module from HA and/or an ESP32 based 4.3in Display Module (January 2026)  
 
+![cyd_relay](https://github.com/user-attachments/assets/f0d13519-b735-44eb-8d1f-94dbe338054e)
+
 #### Intro  
 
 This project explores the integration of Home Assistant (HA) with a cheap ESP32-C6 relay module and the Guition JC4827W543C 4.3" LCD Display module.  
