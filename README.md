@@ -51,53 +51,44 @@ To create the YAML for the UI using the latest (at the time of writing this) ESP
 
 * To indicate a BUTTON press, a label WIDGET ( id: relay_state_label) was used to reflect the physical relay state (ON or OFF) via a binary sensor (id: ha_physical_relay).
 
-###  Stage 3 - Backlight Control
+###  Stage 3 - Backlight Control stayed on permanently
 
-#### Problem
-
-Backlight stayed on permanently.
-
-#### Solution
-
--   Added LEDC-controlled backlight
--   Created restartable script
--   Backlight turns off after 60 seconds of inactivity
--   Any touch or HA-triggered state change wakes display
+*   Added LEDC-controlled backlight
+*   Created restartable script
+*   Backlight turns off after 60 seconds of inactivity
+*   Any touch or HA-triggered state change wakes display
 
 ###  Stage 4 - Implement anti burn-in measures
 
-Implemented LVGL pause/resume with snow animation: - Activated via HA
-switch - Prevents OLED/LCD burn-in - Touch interaction resumes normal UI
+*  Implemented LVGL pause/resume with snow animation: - Activated via HAswitch - Prevents OLED/LCD burn-in - Touch interaction resumes normal UI
 
 ###  Stage 5 - Add a slider to control HA relay turn-off delay
 
-#### Feature Added
-
--   LVGL slider (0--300s)
--   Bound to HA number entity: `number.relay_relay_turn_off_delay`
+*  LVGL slider (0--300s)
+*  Bound to HA number entity: `number.relay_relay_turn_off_delay`
 
 #### Behavior
 
--   Slider updates HA
--   HA updates slider (bidirectional sync)
--   Invalid transient HA values filtered
+*  Slider updates HA
+*  HA updates slider (bidirectional sync)
+*  Invalid transient HA values filtered
 
 ### Stage 6 - Implement Local Persistence of Slider Value
 
-### Problem
+#### Problem
 
 Slider reset on reboot.
 
-### Solution
+#### Solution
 
--   Stored delay value in ESPHome global
--   `restore_value: true`
--   Slider initialized from local value on boot
+*  Stored delay value in ESPHome global
+*  `restore_value: true`
+*  Slider initialized from local value on boot
 
 
 ### Stage 7. Implement Countdown Display & UI Lockout
 
-### Feature Added
+#### Feature Added
 
 When relay is turned off with a delay: - Countdown label appears -
 Button and slider are disabled - UI shows: `Turning off in: X s`
@@ -114,6 +105,14 @@ Relay state label updated
 Ensures clean recovery after Wi-Fi / HA restarts.
 
 
+## Stage 9. Fix 'Countdown from 0' bug  
+
+Fix a bug where the slider is set to 0, button is pressed, relay module switches on the physical relay. Press button (start countdown from 0) and relay module should  
+switch the physical relay OFF, however this disables the button/slider effectively locking up the UI! Fix - Add checks to detect a count down value of zero and handle
+correctly.
+
+
+
 
 
 
@@ -125,6 +124,9 @@ investigation but maybe this will give a few pointers for others just starting o
 
 ```
 esphome:
+  #---------------------
+  # version: 120126_2133
+  #---------------------
   name: "cyd"
   platformio_options:
     board_build.flash_mode: dio
