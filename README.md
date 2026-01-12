@@ -13,15 +13,14 @@ learn from. Furthermore - a quick examination of the ESPHome LVGL documentation 
 scratch was going to be steep learning curve especially as example code seemed to be sparse!  
 
 A quick search revealed that the Gution Display module is supported https://devices.esphome.io/devices/guition-jc4827543c/ and I was able
-to copy/paste a short YAML into my ESPHome environment that runs on my development docker computer. This at least worked and formed the base YAML for my proof of concept project.    
+to copy/paste the short YAML supplied into my ESPHome environment that runs on my development docker computer. This at least worked and formed the base YAML for my proof of concept project.    
 
 The creation of the YAML for the ESP32-C6 Relay module is covered in a separate project  https://github.com/roadsnail/ESP32-C6-Relay  
 
 This project builds upon that allowing me to control it from HA or from the display module
 
-###  Display YAML  
+###  Latest Display YAML for the - ESPHome with LVGL for the Guition JC4827W543C 4.3" LCD Display module
 
-#### Latest YAML - ESPHome with LVGL for the Guition JC4827W543C 4.3" LCD Display module
 ```
 esphome:
   name: "cyd"
