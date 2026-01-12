@@ -40,7 +40,12 @@ Key design features: - The UI will use various LVGL widgets to carry out relay s
 * Antiburn + backlight timeout implimented on the display. The default is 60s before the backlight is switched OFF. Any touch or update from HA turns the backlight ON. This is best practice for LCD screens
   improving longevity
 
-To create the YAML for the UI using the latest (at the time of writing this) ESPHome version (2025.12.5)
+To create the YAML for the UI using the latest (at the time of writing this) ESPHome version (2025.12.5)  
+
+#### State diagram showing UI (button) and/or HA Relay Control Actions
+
+<img width="1652" height="328" alt="cyd_state" src="https://github.com/user-attachments/assets/14ee9f26-4bdc-412b-aefc-38407101f37c" />
+
 
 ###  Stage 1 - Create a UI Relay Switch
 
@@ -119,8 +124,10 @@ correctly.
 
 ##  Latest Display YAML for the - ESPHome with LVGL for the Guition JC4827W543C 4.3" LCD Display module  
 
-Here is my latest cyd display YAML for anyone interested. Note that there are still a few features or should that be bugs which require further  
-investigation but maybe this will give a few pointers for others just starting out with ESPHome LVGL?
+Latest cyd display YAML version. Note that there may still be a few features (or should that be bugs) which require further  
+investigation so use this with discretion. This whole exercise has been a ESPHome LVGL learning experience and a test of ChatGPT's expertise.
+
+ENJOY!
 
 ```
 esphome:
