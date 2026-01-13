@@ -136,7 +136,7 @@ ENJOY!
 ```
 esphome:
   #---------------------
-  # version: 130126_1422
+  # version: 130126_1841
   #---------------------
   name: "cyd"
   platformio_options:
@@ -192,6 +192,10 @@ globals:
 
 
 interval:
+#  - interval: 60s
+#    then:
+#      - switch.turn_on: switch_antiburn
+#      - logger.log: "Antiburn on - set by interval (60s) component"
   - interval: 1s
     then:
       - if:
@@ -217,6 +221,8 @@ i2c:
     sda: GPIO8
     scl: GPIO4
     scan: true
+
+
 
 touchscreen:
   - platform: gt911
@@ -388,9 +394,12 @@ script:
   - id: restart_backlight_timer
     mode: restart
     then:
+      - switch.turn_off: switch_antiburn
       - light.turn_on: display_backlight
       - delay: 60s
       - light.turn_off: display_backlight
+      - delay: 1s
+      - switch.turn_on: switch_antiburn
 
   - id: disable_relay_button
     then:
@@ -542,12 +551,13 @@ lvgl:
         # if the physical relay state is reported to be ON (from HA)
         #------------------------------------------------------------
         - button:
+            bg_color: orange
             id: relay_button
             x: 60
             y: 60
             width: 140
             height: 50
-            text: "Toggle Relay"
+            text: "\uF021 Toggle Relay"
             on_click:
               then:
                 - script.execute: restart_backlight_timer   #always restart the backlight (timeout) timer if clicked..screen comes ON
@@ -623,6 +633,7 @@ api:
   on_client_connected:
     then:
       - script.execute: restart_backlight_timer
+      - switch.turn_off: switch_antiburn
       - lvgl.slider.update:
           id: delay_slider
           value: !lambda 'return (int)id(ha_relay_delay).state;'
