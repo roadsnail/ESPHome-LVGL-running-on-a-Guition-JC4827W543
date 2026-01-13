@@ -7,14 +7,9 @@
 
 This project explores the integration of Home Assistant (HA) with a cheap ESP32-C6 relay module and the Guition JC4827W543C 4.3" LCD Display module.  
 
-My aim was to learn how to use ESPHome LVGL to run YAML on the display module to create a UI to control the ESP32 relay module both connected to my test Home Assistant
-setup on my home network. My knowledge of ESPHome is not extensive to be fair making me reliant on searching out example code that I can use and
-learn from. Furthermore - a quick examination of the ESPHome LVGL documentation https://esphome.io/components/lvgl/ made me realise that learning LVGL from 
-scratch was going to be a steep learning curve especially as example code on the net seemed to be sparse!  
+My aim was to learn how to use ESPHome LVGL to run YAML on the display module to create a UI to control the ESP32 relay module both connected to my test Home Assistant setup on my home network. My knowledge of ESPHome is not extensive to be fair making me reliant on searching out example code that I can use and learn from. Furthermore - a quick examination of the ESPHome LVGL documentation https://esphome.io/components/lvgl/ made me realise that learning LVGL from scratch was going to be a steep learning curve especially as example code on the net seemed to be sparse!  
 
-A quick search revealed that the Guition Display module IS supported in ESPHome LVGL https://devices.esphome.io/devices/guition-jc4827543c/ and I was able
-to copy/paste the short YAML supplied into my ESPHome environment that runs on my development docker computer. This at least compiled and uploaded to my module using
-ESPHome (running on my Linux docker system. This YAML became the base YAML for my proof of concept project presented here.    
+A quick search revealed that the Guition Display module IS supported in ESPHome LVGL https://devices.esphome.io/devices/guition-jc4827543c/ and I was able to copy/paste the short YAML supplied into my ESPHome environment that runs on my development docker computer. This at least compiled and uploaded to my module using ESPHome (running on my Linux docker system. This YAML became the base YAML for my proof of concept project presented here.    
 
 The creation of the YAML for the ESP32-C6 Relay module is covered in a separate project  https://github.com/roadsnail/ESP32-C6-Relay  
 
@@ -38,11 +33,9 @@ Key design features: - The UI will use various LVGL widgets to carry out relay s
 
 * Physical relay–driven state (not optimistic). The UI and HA will display the actual state of the physical relay  
 
-* Delayed turn-off with countdown UI. When switching the physical relay OFF from the UI or HA, the relay module YAML switches the relay OFF after a programmable delay time (0 to 300s). That countdown
-  will be displayed on the UI display while disabling the delay SLIDER and 'Toggle Relay' button. These controls will be re-enabled when the relay delay timer expires
+* Delayed turn-off with countdown UI. When switching the physical relay OFF from the UI or HA, the relay module YAML switches the relay OFF after a programmable delay time (0 to 300s). That countdown will be displayed on the UI display while disabling the delay SLIDER and 'Toggle Relay' button. These controls will be re-enabled when the relay delay timer expires
 
-* Antiburn + backlight timeout implimented on the display. The default is 60s before the backlight is switched OFF. Any touch or update from HA turns the backlight ON. This is best practice for LCD screens
-  improving longevity
+* Antiburn + backlight timeout implimented on the display. The default is 60s before the backlight is switched OFF. Any touch or update from HA turns the backlight ON. This is best practice for LCD screens improving longevity
 
 To create the YAML for the UI using the latest (at the time of writing this) ESPHome version (2025.12.5)  
 
@@ -53,7 +46,8 @@ To create the YAML for the UI using the latest (at the time of writing this) ESP
 
 ###  Stage 1 - Create a UI Relay Switch
 
-* Create a LVGL SWITCH widget which drives a template switch (id: relay_proxy). The template switch in turn drives the HA virtual relay switch which controls the relay module virtual relay switch.
+* Create a LVGL SWITCH widget which drives a template switch (id: relay_proxy). The template switch in turn drives the HA virtual relay switch which controls the relay module virtual relay switch.  
+
   The SWITCH widget was changed to a BUTTON (id: relay_button) widget as there was an issue updating its status from HA. 
   
 ###  Stage 2 - Create a label widget 
@@ -116,9 +110,7 @@ Ensures clean recovery after Wi-Fi / HA restarts.
 
 ## Stage 9. Fix 'Countdown from 0' bug  
 
-Fix a bug where the slider is set to 0, button is pressed, relay module switches on the physical relay. Press button (start countdown from 0) and relay module should  
-switch the physical relay OFF, however this disables the button/slider effectively locking up the UI! Fix - Add checks to detect a count down value of zero and handle
-correctly.
+Fix a bug where the slider is set to 0, button is pressed, relay module switches on the physical relay. Press button (start countdown from 0) and relay module should switch the physical relay OFF, however this disables the button/slider effectively locking up the UI! Fix - Add checks to detect a count down value of zero and handle correctly.
 
 
 
@@ -128,8 +120,7 @@ correctly.
 
 ##  Latest Display YAML for the - ESPHome with LVGL for the Guition JC4827W543C 4.3" LCD Display module  
 
-Latest cyd display YAML version. Note that there may still be a few features (or should that be bugs) which require further  
-investigation so use this with discretion. This whole exercise has been a ESPHome LVGL learning experience and a test of ChatGPT's expertise.
+Latest cyd display YAML version. Note that there may still be a few features (or should that be bugs) which require further investigation so use this with discretion. This whole exercise has been a ESPHome LVGL learning experience and a test of ChatGPT's expertise.
 
 ENJOY!
 
