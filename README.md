@@ -136,7 +136,7 @@ ENJOY!
 ```
 esphome:
   #---------------------
-  # version: 120126_2133
+  # version: 130126_1422
   #---------------------
   name: "cyd"
   platformio_options:
@@ -145,7 +145,7 @@ esphome:
     priority: -100
     then:
       - component.update: my_display
-      - lvgl.slider.update:
+      - lvgl.slider.update:                                         #set display slider value (delay_slider) to global relay_turn_off_delay_local value
           id: delay_slider
           value: !lambda "return id(relay_turn_off_delay_local);"
 
@@ -175,17 +175,17 @@ wifi:
 
 
 globals:
-  - id: relay_turn_off_delay_local
+  - id: relay_turn_off_delay_local      # local value of the relay_off_delay timer. Make persistent (restore_value: true)
     type: int
     restore_value: true
     initial_value: '0'
 
-  - id: countdown_active
+  - id: countdown_active                # relay off countdown time active flag
     type: bool
     restore_value: no
     initial_value: 'false'
 
-  - id: countdown_remaining
+  - id: countdown_remaining             # relay delay time remaining
     type: int
     restore_value: no
     initial_value: '0'
@@ -197,12 +197,12 @@ interval:
       - if:
           condition:
             lambda: 'return id(countdown_active);'
-          then:
+          then:                                         # if the relay delay is active, then every second reduce countdown_remaining by 1
             - lambda: |-
                 if (id(countdown_remaining) > 0) {
                   id(countdown_remaining)--;
                 }
-            - lvgl.label.update:
+            - lvgl.label.update:                        # then update the UI countdown_label...define a buffer for the UI label, then put the countdown remaining value into the buffer
                 id: countdown_label
                 text: !lambda |-
                   static char buf[32];
@@ -210,7 +210,7 @@ interval:
                   return buf;
 
 # -------------------------------
-# I2C + Touch
+# I2C + Touchscreen hardware setup
 # -------------------------------
 i2c:
   - id: bus_a
@@ -228,18 +228,18 @@ touchscreen:
     reset_pin: GPIO38
     on_touch:
       then:
-        - script.execute: restart_backlight_timer
+        - script.execute: restart_backlight_timer                   # touching the screen runs script 
     on_release:
       then:
         - if:
-            condition: lvgl.is_paused
+            condition: lvgl.is_paused                               # and (if antiburn is running), switches it off and restores UI
             then:
               - lvgl.resume
               - lvgl.widget.redraw
               - logger.log: "Antiburn stopped by touch"
 
 # -------------------------------
-# Display
+# Display... spi hardware setup. 
 # -------------------------------
 spi:
   id: quad_spi
@@ -362,7 +362,7 @@ font:
     size: 24
 
 # -------------------------------
-# Backlight
+# H/W Backlight Setup
 # -------------------------------
 output:
   - platform: ledc
@@ -370,6 +370,9 @@ output:
     id: gpio_backlight_pwm
     frequency: 1000Hz
 
+#-----------------------------------------------------------
+# light component. Available as entity in HA Cyd Display Backlight
+#-----------------------------------------------------------
 light:
   - platform: monochromatic
     output: gpio_backlight_pwm
@@ -379,6 +382,8 @@ light:
 
 
 # -------------------------------
+# scripts - self documenting
+#--------------------------------
 script:
   - id: restart_backlight_timer
     mode: restart
@@ -421,6 +426,9 @@ switch:
           data:
             entity_id: switch.relay_relay_control
 
+#-----------------------------------------------
+# Antiburn - available as a switch on HA
+#-----------------------------------------------
   - platform: template
     id: switch_antiburn
     name: Antiburn
@@ -442,14 +450,14 @@ number:
     id: ha_relay_delay
     entity_id: number.relay_relay_turn_off_delay
     on_value:
-      then:
+      then:                                                     # if the delay entity (from HA) updates then...sanity check it
         - lambda: |-
             if (x < 0 || x > 300) {
               // Ignore any transient / invalid HA values
               return;
             }
             id(relay_turn_off_delay_local) = (int)x;
-        - lvgl.slider.update:
+        - lvgl.slider.update:                                   # if valid, then set the local variable to be the same and update UI slider and label
             id: delay_slider
             value: !lambda 'return (int)x;'
         - lvgl.label.update:
@@ -462,7 +470,7 @@ number:
 
 
 # -------------------------------
-# HA state imports
+# Import states of entities from HA and act upon any changes
 # -------------------------------
 binary_sensor:
   - platform: homeassistant
@@ -473,12 +481,12 @@ binary_sensor:
         - script.execute: restart_backlight_timer
         - if:
             condition:
-              binary_sensor.is_on: ha_physical_relay
+              binary_sensor.is_on: ha_physical_relay        # if physical relay state (of the relay module) goes on... then
             then:
               - lvgl.label.update:
                   id: relay_state_label
-                  text: "Physical Relay State: ON"
-            else:
+                  text: "Physical Relay State: ON"          # update UI label to indicate the physical relay is ON
+            else:                                           # physical relay has switched OFF, so... enable UI 'Toggle Relay' button reset countdown flag and make counter zero
               - script.execute: enable_relay_button
               - lambda: |-
                   id(countdown_active) = false;
@@ -488,11 +496,11 @@ binary_sensor:
                   hidden: true
               - lvgl.label.update:
                   id: relay_state_label
-                  text: "Physical Relay State: OFF"
+                  text: "Physical Relay State: OFF"         # update the UI physical relay state
 
 
   - platform: homeassistant
-    id: ha_virtual_relay
+    id: ha_virtual_relay                                # this binary_sensor state is set from HA entity switch.relay_relay_control which is set by ESPHome on the relay module
     entity_id: switch.relay_relay_control
     on_state:
       then:
@@ -504,21 +512,21 @@ binary_sensor:
               - if:
                   condition:
                     lambda: 'return id(relay_turn_off_delay_local) > 0;'
-                  then:
-                    # Start countdown UI ONLY if delay > 0
+                  then:                                                                 # countdown is active (as relay_turn_off_delay_local is >)
+                    # Start countdown UI ONLY if relay_turn_off_delay_local > 0
                     - lambda: |-
                         id(countdown_active) = true;
                         id(countdown_remaining) = id(relay_turn_off_delay_local);
                     - lvgl.label.update:
                         id: countdown_label
-                        hidden: false
-                        text: !lambda |-
+                        hidden: false                                                   # make label visible
+                        text: !lambda |-                                                # and write the remaining countdown to the label
                           static char buf[32];
                           snprintf(buf, sizeof(buf),
                                    "Turning off in: %d s",
                                    id(countdown_remaining));
                           return buf;
-                    - script.execute: disable_relay_button
+                    - script.execute: disable_relay_button                              # also disable the UI 'Toggle relay' button and slider
 
 # -------------------------------
 # LVGL UI
@@ -527,12 +535,12 @@ lvgl:
   pages:
     - id: main_page
       scrollable: false
-      widgets:
-#-----------------------------------------------------------
-# button widget - Contains text 'Toggle Relay' - used to switch template switch relay_proxy
-# may also start the 'countdown' (until physical relay on module is switched OFF)
-# if the physical relay state is reported to be ON (from HA)
-#------------------------------------------------------------
+      widgets:              # define widgets (on main_page) below. button,labels and slider
+        #-----------------------------------------------------------
+        # button widget (relay_button) - Contains text 'Toggle Relay' - used to switch local template switch (relay_proxy)
+        # turn on backlight and restart backlight timer...may also start the 'countdown' 
+        # if the physical relay state is reported to be ON (from HA)
+        #------------------------------------------------------------
         - button:
             id: relay_button
             x: 60
@@ -550,7 +558,7 @@ lvgl:
                       - if:
                           condition:
                             lambda: 'return id(relay_turn_off_delay_local) > 0;'
-                          then:
+                          then:                                                             # set countdown_active flag if local variable > 0, write countdown to UI and disable the Toggle Relay button (as we are counting down)
                             - lambda: |-
                                 id(countdown_active) = true;
                                 id(countdown_remaining) = id(relay_turn_off_delay_local);
@@ -562,26 +570,26 @@ lvgl:
                                   snprintf(buf, sizeof(buf), "Turning off in: %d s", id(countdown_remaining));
                                   return buf;
                             - script.execute: disable_relay_button
-                      - switch.turn_off: relay_proxy
-                    else:
-                      - switch.turn_on: relay_proxy
+                      - switch.turn_off: relay_proxy                                        # turn on or off the local relay_proxy switch 
+                    else:                                                                   # which drives the HA entity switch.relay_relay_control
+                      - switch.turn_on: relay_proxy                                         # thus switching the relay board virtual switch
 
         - label:
-            id: relay_state_label
+            id: relay_state_label                                                           # UI label reports state of physical relay on the relay module
             x: 220
             y: 70
             text: "Physical Relay State: OFF"
 
 
         - label:
-            id: countdown_label
+            id: countdown_label                                                             # UI label reports countdown value during the relay off delay time
             text: ""
             x: 220
             y: 110
             hidden: true
 
 #
-# define a slider widget
+# define a slider widget to display the relay off timer (derived from HA entity number.relay_relay_turn_off_delay)
 #
         - slider:
             id: delay_slider
@@ -607,7 +615,9 @@ lvgl:
 
 
 # -------------------------------
-# HA reconnect sync various things from HA
+# HA reconnect sync various things from HA...
+# restarts the backlight timer... writes the local ha_relay_delay value to the UI... checks the current state of
+# the physical relay (reported via HA driven binary_sensor) state is written to the UI
 # -------------------------------
 api:
   on_client_connected:
