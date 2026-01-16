@@ -127,7 +127,7 @@ ENJOY!
 ```
 esphome:
   #---------------------
-  # version: 130126_1841
+  # version: 160126_1300
   #---------------------
   name: "cyd"
   platformio_options:
@@ -183,25 +183,28 @@ globals:
 
 
 interval:
-#  - interval: 60s
-#    then:
-#      - switch.turn_on: switch_antiburn
-#      - logger.log: "Antiburn on - set by interval (60s) component"
   - interval: 1s
     then:
-      - if:
+      - if:                                             # if countdown_active is true, then...
           condition:
             lambda: 'return id(countdown_active);'
-          then:                                         # if the relay delay is active, then every second reduce countdown_remaining by 1
+          then:                                         # if the relay delay is active, then every second reduce countdown_remaining by 
             - lambda: |-
                 if (id(countdown_remaining) > 0) {
                   id(countdown_remaining)--;
                 }
-            - lvgl.label.update:                        # then update the UI countdown_label...define a buffer for the UI label, then put the countdown remaining value into the buffer
-                id: countdown_label
+            - lvgl.widget.disable:                      # disable delay progress slider, then...
+                id: delay_prog_slider
+            - lvgl.slider.update:                       # update progress slider using countdown_remaining
+                id: delay_prog_slider
+                hidden: false
+                value: !lambda return id(countdown_remaining);
+            - lvgl.label.update:                        # then update the UI countdown_prog_label...define a buffer for the UI label, then put the countdown remaining value into the buffer
+                id: delay_prog_label
+                hidden: false
                 text: !lambda |-
-                  static char buf[32];
-                  snprintf(buf, sizeof(buf), "Turning off in: %d s", id(countdown_remaining));
+                  static char buf[36];
+                  snprintf(buf, sizeof(buf), "Physical Relay Turning off in: %d s", id(countdown_remaining));
                   return buf;
 
 # -------------------------------
@@ -387,7 +390,8 @@ script:
     then:
       - switch.turn_off: switch_antiburn
       - light.turn_on: display_backlight
-      - delay: 60s
+      # screen timeout delay is 60s unless relay off countdown is active, then 60s is added to the delay 
+      - delay: !lambda "if (id(countdown_active)) return ((id(relay_turn_off_delay_local) + 60)* 1000); else return 60000;"
       - light.turn_off: display_backlight
       - delay: 1s
       - switch.turn_on: switch_antiburn
@@ -444,7 +448,6 @@ switch:
       - lvgl.widget.redraw
 
 
-
 number:
   - platform: homeassistant
     id: ha_relay_delay
@@ -457,7 +460,7 @@ number:
               return;
             }
             id(relay_turn_off_delay_local) = (int)x;
-        - lvgl.slider.update:                                   # if valid, then set the local variable to be the same and update UI slider and label
+        - lvgl.slider.update:                                   # if valid, then set the local variable to be the same and update UI slider and its label
             id: delay_slider
             value: !lambda 'return (int)x;'
         - lvgl.label.update:
@@ -466,7 +469,6 @@ number:
               char buf[40];
               sprintf(buf, "Off Delay: %d s", (int)x);
               return std::string(buf);
-
 
 
 # -------------------------------
@@ -478,7 +480,6 @@ binary_sensor:
     entity_id: switch.relay_main_relay_physical
     on_state:
       then:
-        - script.execute: restart_backlight_timer
         - if:
             condition:
               binary_sensor.is_on: ha_physical_relay        # if physical relay state (of the relay module) goes on... then
@@ -491,16 +492,19 @@ binary_sensor:
               - lambda: |-
                   id(countdown_active) = false;
                   id(countdown_remaining) = 0;
-              - lvgl.label.update:
-                  id: countdown_label
+              - lvgl.slider.update:                         # hide progress slider
+                  id: delay_prog_slider
+                  hidden: true
+              - lvgl.label.update:                          # hide progress_label
+                  id: delay_prog_label
                   hidden: true
               - lvgl.label.update:
                   id: relay_state_label
-                  text: "Physical Relay State: OFF"         # update the UI physical relay state
+                  text: "Physical Relay State: OFF"         # update the UI physical relay state to OFF
 
 
   - platform: homeassistant
-    id: ha_virtual_relay                                # this binary_sensor state is set from HA entity switch.relay_relay_control which is set by ESPHome on the relay module
+    id: ha_virtual_relay                                    # binary_sensor state is set from HA entity switch.relay_relay_control
     entity_id: switch.relay_relay_control
     on_state:
       then:
@@ -512,21 +516,12 @@ binary_sensor:
               - if:
                   condition:
                     lambda: 'return id(relay_turn_off_delay_local) > 0;'
-                  then:                                                                 # countdown is active (as relay_turn_off_delay_local is >)
+                  then:                                                                 # countdown is active (as relay_turn_off_delay_local is > 0)
                     # Start countdown UI ONLY if relay_turn_off_delay_local > 0
                     - lambda: |-
                         id(countdown_active) = true;
                         id(countdown_remaining) = id(relay_turn_off_delay_local);
-                    - lvgl.label.update:
-                        id: countdown_label
-                        hidden: false                                                   # make label visible
-                        text: !lambda |-                                                # and write the remaining countdown to the label
-                          static char buf[32];
-                          snprintf(buf, sizeof(buf),
-                                   "Turning off in: %d s",
-                                   id(countdown_remaining));
-                          return buf;
-                    - script.execute: disable_relay_button                              # also disable the UI 'Toggle relay' button and slider
+                    - script.execute: disable_relay_button                              # disable the UI 'Toggle relay' button (and slider) during countdown
 
 # -------------------------------
 # LVGL UI
@@ -545,7 +540,7 @@ lvgl:
             bg_color: orange
             id: relay_button
             x: 60
-            y: 60
+            y: 20
             width: 140
             height: 50
             text: "\uF021 Toggle Relay"
@@ -563,13 +558,6 @@ lvgl:
                             - lambda: |-
                                 id(countdown_active) = true;
                                 id(countdown_remaining) = id(relay_turn_off_delay_local);
-                            - lvgl.label.update:
-                                id: countdown_label
-                                hidden: false
-                                text: !lambda |-
-                                  static char buf[32];
-                                  snprintf(buf, sizeof(buf), "Turning off in: %d s", id(countdown_remaining));
-                                  return buf;
                             - script.execute: disable_relay_button
                       - switch.turn_off: relay_proxy                                        # turn on or off the local relay_proxy switch 
                     else:                                                                   # which drives the HA entity switch.relay_relay_control
@@ -578,16 +566,8 @@ lvgl:
         - label:
             id: relay_state_label                                                           # UI label reports state of physical relay on the relay module
             x: 220
-            y: 70
+            y: 40            
             text: "Physical Relay State: OFF"
-
-
-        - label:
-            id: countdown_label                                                             # UI label reports countdown value during the relay off delay time
-            text: ""
-            x: 220
-            y: 110
-            hidden: true
 
 #
 # define a slider widget to display the relay off timer (derived from HA entity number.relay_relay_turn_off_delay)
@@ -595,7 +575,7 @@ lvgl:
         - slider:
             id: delay_slider
             x: 60
-            y: 140
+            y: 100
             width: 300
             min_value: 0
             max_value: 300
@@ -611,8 +591,25 @@ lvgl:
         - label:
             id: delay_label
             x: 60
-            y: 180
+            y: 120
             text: "Off Delay: 0 s"
+
+
+        - slider:
+            id: delay_prog_slider
+            x: 60
+            y: 180
+            hidden: true
+            width: 300
+            min_value: 0
+            max_value: 300
+
+        - label:
+            id: delay_prog_label
+            text: ""
+            x: 60
+            y: 200
+            hidden: true
 
 
 # -------------------------------
