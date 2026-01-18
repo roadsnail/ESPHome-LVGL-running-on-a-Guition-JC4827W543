@@ -113,7 +113,9 @@ Ensures clean recovery after Wi-Fi / HA restarts.
 Fix a bug where the slider is set to 0, button is pressed, relay module switches on the physical relay. Press button (start countdown from 0) and relay module should switch the physical relay OFF, however this disables the button/slider effectively locking up the UI! Fix - Add checks to detect a count down value of zero and handle correctly.
 
 
+## 16th Jan 2026 Add 'relay off countdown' slider/label feature  
 
+Replace 'relay off time' countdown label with a read-only slider style countdown/label feature. Also, test for relay off time greater than the default 60 second screen timeout/saver, then set the timer to be the count down time plus 60 seconds. This stops the screen timing out during countdown periods longer than 60 seconds  
 
 
 
@@ -122,7 +124,7 @@ Fix a bug where the slider is set to 0, button is pressed, relay module switches
 
 Latest cyd display YAML version. Note that there may still be a few features (or should that be bugs) which require further investigation so use this with discretion. This whole exercise has been a ESPHome LVGL learning experience and a test of ChatGPT's expertise.
 
-ENJOY!
+
 
 ```
 esphome:
